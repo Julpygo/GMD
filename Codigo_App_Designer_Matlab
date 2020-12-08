@@ -1,0 +1,343 @@
+classdef TiresMF < matlab.apps.AppBase
+
+    % Properties that correspond to app components
+    properties (Access = public)
+        UIFigure                        matlab.ui.Figure
+        ComportamientodedinamicalongitudinalylateralUtilizandoMF62Label  matlab.ui.control.Label
+        FzNLabel                        matlab.ui.control.Label
+        Fz                              matlab.ui.control.NumericEditField
+        VpromkmhLabel                   matlab.ui.control.Label
+        Vx                              matlab.ui.control.NumericEditField
+        alphaMaxLabel                   matlab.ui.control.Label
+        alpha                           matlab.ui.control.NumericEditField
+        ParametroTabbyEvoTextArea       matlab.ui.control.TextArea
+        ParametroTabbyEvoTextAreaLabel  matlab.ui.control.Label
+        kappaEditFieldLabel             matlab.ui.control.Label
+        kappa                           matlab.ui.control.NumericEditField
+        PresionPsiSliderLabel           matlab.ui.control.Label
+        Presion                         matlab.ui.control.Slider
+        CamberLabel                     matlab.ui.control.Label
+        camber                          matlab.ui.control.Slider
+        BorrarButton                    matlab.ui.control.Button
+        GraficarSpinnerLabel            matlab.ui.control.Label
+        GraficarSpinner                 matlab.ui.control.Spinner
+        UIAxes_8                        matlab.ui.control.UIAxes
+        UIAxes_6                        matlab.ui.control.UIAxes
+        UIAxes_4                        matlab.ui.control.UIAxes
+        UIAxes_3                        matlab.ui.control.UIAxes
+        UIAxes_2                        matlab.ui.control.UIAxes
+        UIAxes                          matlab.ui.control.UIAxes
+    end
+
+    % Callbacks that handle component events
+    methods (Access = private)
+
+        % Value changed function: GraficarSpinner
+        function GraficarButtonPushed(app, event)
+global P_1
+global G_1
+global P_2
+global G_2
+            
+            %Constantes
+            nPoints = 200;
+            
+            %Variables de entrada
+            alpha1	= linspace(-app.alpha.Value*pi()/180,app.alpha.Value*pi()/180, nPoints)';
+            alpha2	= ones(nPoints,1).*app.alpha.Value.*pi()/180;
+            Fz1 = ones(nPoints,1).*app.Fz.Value;
+            kappa1 = ones(nPoints,1).*app.kappa.Value;
+            kappa2 = linspace(-0.05,-1, nPoints)';
+            gamma1 = ones(nPoints,1).*app.camber.Value.*(pi()/180);
+            phit1 = ones(nPoints,1).*0;
+            Vx1 = ones(nPoints,1).*app.Vx.Value.*(1000/3600);
+            Vx2 = linspace(2,app.Vx.Value*(1000/3600), nPoints)';
+            P1 = ones(nPoints,1).*app.Presion.Value.*6894.76;
+            
+            % Cree una cadena con el nombre del archivo TIR
+            TIRfile1 = 'MagicFormula62_Parameters.TIR';
+            
+            % Seleccione un modo de uso
+            useMode1 = 111;
+            
+            % Envuelva todas las entradas en una matriz
+            inputs1 = [Fz1 kappa1 alpha1 gamma1 phit1 Vx1 P1];
+            inputs2 = [Fz1 kappa1 alpha2 gamma1 phit1 Vx2 P1];
+            inputs3 = [Fz1 kappa2 alpha2 gamma1 phit1 Vx1 P1];
+            
+            % Almacene la salida de mfeval en una matriz 2D
+            output1 = mfeval(TIRfile1, inputs1, useMode1);
+            output2 = mfeval(TIRfile1, inputs2, useMode1);
+            output3 = mfeval(TIRfile1,inputs3, useMode1);
+            
+            % Extraiga variables de la salida MFeval. Para obtener más información, escriba "help mfeval"
+            %Dinamica Lateral
+            Fy1 = output1(:,2);
+            Mx1 = output1(:,4);
+            Mz1 = output1(:,6);
+            SA1 = rad2deg(output1(:,8)); % Convertir a grados
+            t1 = output1(:,16);
+            %Dinamica Longitudinal
+            Fx3 = output3(:,2);
+            My2 = output2(:,5);
+            VX2 = output2(:,11).*(3600/1000); % Convertir a km/h
+            
+            if app.GraficarSpinner.Value == 1
+                %Graficas Dinamica lateral
+                plot(app.UIAxes,SA1,Fy1);             
+                plot(app.UIAxes_2,SA1,Mz1);                 
+                plot(app.UIAxes_3,SA1,t1);
+                plot(app.UIAxes_4,SA1,Mx1);
+                P_1 = num2str(app.Presion.Value);
+                G_1 = num2str(app.camber.Value);
+                legend(app.UIAxes_4,['P=',P_1,'Psi y \gamma=',G_1,'º'],'Location','eastoutside')
+                %Graficas dinamica longitudinal
+                plot(app.UIAxes_8,VX2,-My2)
+                plot(app.UIAxes_6,-100*kappa2,-Fx3)
+            elseif app.GraficarSpinner.Value == 2
+                %Graficas Dinamica lateral
+                plot(app.UIAxes,SA1,Fy1);             
+                plot(app.UIAxes_2,SA1,Mz1);                 
+                plot(app.UIAxes_3,SA1,t1);
+                plot(app.UIAxes_4,SA1,Mx1);
+                P_2 = num2str(app.Presion.Value);
+                G_2 = num2str(app.camber.Value);
+                legend(app.UIAxes_4,{['P=',P_1,'Psi y \gamma=',G_1,'º'],['P=',P_2,'Psi y \gamma=',G_2,'º']},'Location','eastoutside')
+                %Graficas dinamica longitudinal
+                plot(app.UIAxes_8,VX2,-My2)
+                plot(app.UIAxes_6,-100*kappa2,-Fx3)
+            elseif app.GraficarSpinner.Value == 3
+                %Graficas Dinamica lateral
+                plot(app.UIAxes,SA1,Fy1);             
+                plot(app.UIAxes_2,SA1,Mz1);                 
+                plot(app.UIAxes_3,SA1,t1);
+                plot(app.UIAxes_4,SA1,Mx1);
+                P_3 = num2str(app.Presion.Value);
+                G_3 = num2str(app.camber.Value);
+                legend(app.UIAxes_4,{['P=',P_1,'Psi y \gamma=',G_1,'º'],['P=',P_2,'Psi y \gamma=',G_2,'º'],['P=',P_3,'Psi y \gamma=',G_3,'º']},'Location','eastoutside')
+                %Graficas dinamica longitudinal
+                plot(app.UIAxes_8,VX2,-My2)
+                plot(app.UIAxes_6,-100*kappa2,-Fx3)
+                
+            end
+            
+ 
+        end
+
+        % Button pushed function: BorrarButton
+        function BorrarButtonPushed(app, event)
+            cla(app.UIAxes)
+            cla(app.UIAxes_2)
+            cla(app.UIAxes_3)
+            cla(app.UIAxes_4)
+            cla(app.UIAxes_8)
+            cla(app.UIAxes_6)
+            app.GraficarSpinner.Value = 0;
+            %W = 589.24*9.81; %Peso del vehículo
+            %l1 = 1.0613; %Distancia al eje delantero desde el centro de masa [mm]
+            %l2 = 1.2498;  %Distancia al eje trasero desde el centro de masa [mm]
+            %fd = W*l2/(l1+l2); %Fuerza sobre el eje delantero [N]
+            %ft = W*l1/(l1+l2); %Fuerza sobre el eje trasero [N]
+            %F_zd = fd/2;     %Fuerza vertical en una llanta delantera [N]
+            %F_zt = ft/2 ;    %Fuerza vertical en una llanta trasera [N]
+        end
+    end
+
+    % Component initialization
+    methods (Access = private)
+
+        % Create UIFigure and components
+        function createComponents(app)
+
+            % Create UIFigure and hide until all components are created
+            app.UIFigure = uifigure('Visible', 'off');
+            app.UIFigure.Position = [100 -10 847 963];
+            app.UIFigure.Name = 'MATLAB App';
+            app.UIFigure.Scrollable = 'on';
+
+            % Create ComportamientodedinamicalongitudinalylateralUtilizandoMF62Label
+            app.ComportamientodedinamicalongitudinalylateralUtilizandoMF62Label = uilabel(app.UIFigure);
+            app.ComportamientodedinamicalongitudinalylateralUtilizandoMF62Label.Position = [253 903 378 31];
+            app.ComportamientodedinamicalongitudinalylateralUtilizandoMF62Label.Text = 'Comportamiento de dinamica longitudinal y lateral. Utilizando MF 6.2';
+
+            % Create FzNLabel
+            app.FzNLabel = uilabel(app.UIFigure);
+            app.FzNLabel.HorizontalAlignment = 'right';
+            app.FzNLabel.Position = [95 848 37 22];
+            app.FzNLabel.Text = 'Fz [N]';
+
+            % Create Fz
+            app.Fz = uieditfield(app.UIFigure, 'numeric');
+            app.Fz.Position = [139 848 63 22];
+            app.Fz.Value = 1563;
+
+            % Create VpromkmhLabel
+            app.VpromkmhLabel = uilabel(app.UIFigure);
+            app.VpromkmhLabel.HorizontalAlignment = 'right';
+            app.VpromkmhLabel.Position = [238 848 77 22];
+            app.VpromkmhLabel.Text = 'Vprom [km/h]';
+
+            % Create Vx
+            app.Vx = uieditfield(app.UIFigure, 'numeric');
+            app.Vx.Position = [330 848 63 22];
+            app.Vx.Value = 50;
+
+            % Create alphaMaxLabel
+            app.alphaMaxLabel = uilabel(app.UIFigure);
+            app.alphaMaxLabel.HorizontalAlignment = 'right';
+            app.alphaMaxLabel.Position = [240 805 75 22];
+            app.alphaMaxLabel.Text = 'alpha Max [º]';
+
+            % Create alpha
+            app.alpha = uieditfield(app.UIFigure, 'numeric');
+            app.alpha.Position = [330 805 63 22];
+            app.alpha.Value = 20;
+
+            % Create ParametroTabbyEvoTextArea
+            app.ParametroTabbyEvoTextArea = uitextarea(app.UIFigure);
+            app.ParametroTabbyEvoTextArea.Position = [630 787 106 60];
+            app.ParametroTabbyEvoTextArea.Value = {'Fzd = 1563 N'; 'Fzt  = 1327 N'};
+
+            % Create ParametroTabbyEvoTextAreaLabel
+            app.ParametroTabbyEvoTextAreaLabel = uilabel(app.UIFigure);
+            app.ParametroTabbyEvoTextAreaLabel.HorizontalAlignment = 'right';
+            app.ParametroTabbyEvoTextAreaLabel.Position = [622 854 121 22];
+            app.ParametroTabbyEvoTextAreaLabel.Text = 'Parametro Tabby Evo';
+
+            % Create kappaEditFieldLabel
+            app.kappaEditFieldLabel = uilabel(app.UIFigure);
+            app.kappaEditFieldLabel.HorizontalAlignment = 'right';
+            app.kappaEditFieldLabel.Position = [94 805 38 22];
+            app.kappaEditFieldLabel.Text = 'kappa';
+
+            % Create kappa
+            app.kappa = uieditfield(app.UIFigure, 'numeric');
+            app.kappa.Position = [139 805 63 22];
+
+            % Create PresionPsiSliderLabel
+            app.PresionPsiSliderLabel = uilabel(app.UIFigure);
+            app.PresionPsiSliderLabel.HorizontalAlignment = 'right';
+            app.PresionPsiSliderLabel.Position = [73 753 73 22];
+            app.PresionPsiSliderLabel.Text = 'Presion [Psi]';
+
+            % Create Presion
+            app.Presion = uislider(app.UIFigure);
+            app.Presion.Limits = [29 58];
+            app.Presion.Position = [167 762 150 3];
+            app.Presion.Value = 30;
+
+            % Create CamberLabel
+            app.CamberLabel = uilabel(app.UIFigure);
+            app.CamberLabel.HorizontalAlignment = 'right';
+            app.CamberLabel.Position = [385 753 63 22];
+            app.CamberLabel.Text = 'Camber [º]';
+
+            % Create camber
+            app.camber = uislider(app.UIFigure);
+            app.camber.Limits = [-5 5];
+            app.camber.Position = [469 762 150 3];
+
+            % Create BorrarButton
+            app.BorrarButton = uibutton(app.UIFigure, 'push');
+            app.BorrarButton.ButtonPushedFcn = createCallbackFcn(app, @BorrarButtonPushed, true);
+            app.BorrarButton.Position = [472 805 100 22];
+            app.BorrarButton.Text = 'Borrar';
+
+            % Create GraficarSpinnerLabel
+            app.GraficarSpinnerLabel = uilabel(app.UIFigure);
+            app.GraficarSpinnerLabel.HorizontalAlignment = 'right';
+            app.GraficarSpinnerLabel.Position = [469 848 48 22];
+            app.GraficarSpinnerLabel.Text = 'Graficar';
+
+            % Create GraficarSpinner
+            app.GraficarSpinner = uispinner(app.UIFigure);
+            app.GraficarSpinner.Limits = [0 3];
+            app.GraficarSpinner.ValueChangedFcn = createCallbackFcn(app, @GraficarButtonPushed, true);
+            app.GraficarSpinner.Editable = 'off';
+            app.GraficarSpinner.Tooltip = {'No disminuir contador, utilizar boton borrar'};
+            app.GraficarSpinner.Position = [522 848 50 22];
+
+            % Create UIAxes_8
+            app.UIAxes_8 = uiaxes(app.UIFigure);
+            title(app.UIAxes_8, 'Momento de resistencia a la rodadura')
+            xlabel(app.UIAxes_8, 'Vx [Km/h]')
+            ylabel(app.UIAxes_8, '-My [Nm]')
+            zlabel(app.UIAxes_8, 'Z')
+            app.UIAxes_8.NextPlot = 'add';
+            app.UIAxes_8.Position = [45 106 268 167];
+
+            % Create UIAxes_6
+            app.UIAxes_6 = uiaxes(app.UIFigure);
+            title(app.UIAxes_6, '-Fx Vs kappa ')
+            xlabel(app.UIAxes_6, 'Deslizamiento de frenado -k[%]')
+            ylabel(app.UIAxes_6, 'Fuerza de frenado -Fx [N]')
+            zlabel(app.UIAxes_6, 'Z')
+            app.UIAxes_6.NextPlot = 'add';
+            app.UIAxes_6.Position = [369 106 280 167];
+
+            % Create UIAxes_4
+            app.UIAxes_4 = uiaxes(app.UIFigure);
+            title(app.UIAxes_4, 'Mx Vs \alpha')
+            xlabel(app.UIAxes_4, 'Angulo de deslizamiento [º]')
+            ylabel(app.UIAxes_4, 'Momento de vuelco [Nm]')
+            zlabel(app.UIAxes_4, 'Z')
+            app.UIAxes_4.NextPlot = 'add';
+            app.UIAxes_4.Position = [373 311 435 167];
+
+            % Create UIAxes_3
+            app.UIAxes_3 = uiaxes(app.UIFigure);
+            title(app.UIAxes_3, 't Vs \alpha')
+            xlabel(app.UIAxes_3, 'Angulo de deslizamiento [º]')
+            ylabel(app.UIAxes_3, 'huella neumatica [m]')
+            zlabel(app.UIAxes_3, 'Z')
+            app.UIAxes_3.NextPlot = 'add';
+            app.UIAxes_3.Position = [45 311 272 167];
+
+            % Create UIAxes_2
+            app.UIAxes_2 = uiaxes(app.UIFigure);
+            title(app.UIAxes_2, 'Mz Vs \alpha')
+            xlabel(app.UIAxes_2, 'Angulo de deslizamiento [º]')
+            ylabel(app.UIAxes_2, 'Momento de autoalin. [Nm]')
+            zlabel(app.UIAxes_2, 'Z')
+            app.UIAxes_2.NextPlot = 'add';
+            app.UIAxes_2.Position = [369 531 280 167];
+
+            % Create UIAxes
+            app.UIAxes = uiaxes(app.UIFigure);
+            title(app.UIAxes, 'Fy Vs \alpha')
+            xlabel(app.UIAxes, 'Angulo de deslizamiento [º]')
+            ylabel(app.UIAxes, 'Fuerza lateral [N]')
+            zlabel(app.UIAxes, 'Z')
+            app.UIAxes.NextPlot = 'add';
+            app.UIAxes.Position = [45 531 272 167];
+
+            % Show the figure after all components are created
+            app.UIFigure.Visible = 'on';
+        end
+    end
+
+    % App creation and deletion
+    methods (Access = public)
+
+        % Construct app
+        function app = TiresMF
+
+            % Create UIFigure and components
+            createComponents(app)
+
+            % Register the app with App Designer
+            registerApp(app, app.UIFigure)
+
+            if nargout == 0
+                clear app
+            end
+        end
+
+        % Code that executes before app deletion
+        function delete(app)
+
+            % Delete UIFigure when app is deleted
+            delete(app.UIFigure)
+        end
+    end
+end
